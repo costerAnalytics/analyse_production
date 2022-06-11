@@ -110,8 +110,11 @@ plt <- plt +
         axis.line = element_line(colour = "black")) +
   xlab('Calving in quarter') +
   ylab('305 days production (kg)') +
-  theme(axis.text.x=element_text(angle=-45, hjust=0.001))
+  ggtitle(betrieb) +
+  theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
+  theme(plot.title = element_text(hjust = 0.5))
 plot(plt)
+
 
 write.table(
   quarters |> select(yearqtr, lactation, production),
