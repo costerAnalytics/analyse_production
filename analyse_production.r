@@ -22,11 +22,14 @@ predict_curve <- function(curve, day){
   c <- curve[3]
   return(sapply(day, \(x){a + b * x + c * exp(-.05 * x)}))
 }
-compute_305 <- function(curve, D = 305){
+compute_total_production <- function(curve, d1, d2){
   a <- curve[1]
   b <- curve[2]
   c <- curve[3]
-  return(a * D + 1/2 * b * D^2 - c / .05 * exp(-.05 * D) + c / .05)
+  primitive <- function(x, a, b, c){
+	return(a * x + 1 / 2 * b * x^2 - c / .05 * exp(-.05 * x))
+  }
+  return(primitive(d2, a, b, c) - primitive(d1, a, b, c))
 }
 
 
@@ -35,8 +38,12 @@ quarters <- expand.grid(year=2016:2022, quarter=1:4) |>
   filter(year < 2022 | quarter < 2)
 quarters <- quarters |> transform(
   yearqtr = paste(year, quarter, sep = '-'),
-  first = NA_real_,
-  later = NA_real_)
+  first_305 = NA_real_,
+  later_305 = NA_real_,
+  fist_30_60 = NA_real_,
+  later_30_60 = NA_real_,
+  first_60_120 = NA_real_,
+  later_60_120 = NA_real_)
 
 
 for(i in 1:nrow(quarters)){
@@ -94,30 +101,74 @@ for(i in 1:nrow(quarters)){
   curves$later_lactation <- c(feff[2], feff[4], feff[6])
   names(curves[[1]]) <- names(curves[[2]]) <- c('a', 'b', 'c')
   
-  quarters$first[i] <- compute_305(curves$first_lactation)
-  quarters$later[i] <- compute_305(curves$later_lactation)
+  quarters$first_305[i] = compute_total_production(curves$first_lactation, d1=0, d2=305)
+  quarters$later_305[i] = compute_total_production(curves$later_lactation, d1=0, d2=305)
+  quarters$fist_30_60[i] = compute_total_production(curves$first_lactation, d1=30, d2=60)
+  quarters$later_30_60[i] = compute_total_production(curves$later_lactation, d1=30, d2=60)
+  quarters$first_60_120[i] = compute_total_production(curves$first_lactation, d1=60, d2=120)
+  quarters$later_60_120[i] = compute_total_production(curves$later_lactation, d1=60, d2=120)
+  
 }
 
 quarters <- quarters |> gather(
-  key=lactation, value=production, first:later)
+  key=lactation_period, value=production, first_305:later_60_120)
 
-plt <- ggplot(data = quarters, aes(x=yearqtr, y=production, group=lactation)) +
+quarters_30_60 <- quarters |> 
+  filter(grepl('30_60', lactation_period)) |>
+  mutate(lactation = gsub('_30_60', '', lactation_period))
+quarters_60_120 <- quarters |> 
+  filter(grepl('60_120', lactation_period)) |>
+  mutate(lactation = gsub('_60_120', '', lactation_period))
+quarters_305 <- quarters |> 
+  filter(grepl('305', lactation_period)) |>
+  mutate(lactation = gsub('_305', '', lactation_period))
+
+plt_30_60 <- ggplot(data = quarters_30_60, aes(x=yearqtr, y=production, group=lactation)) +
   geom_line(aes(col=lactation))
-plt <- plt + 
+plt_30_60 <- plt_30_60 + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) +
+  xlab('Calving in quarter') +
+  ylab('30-60 days production (kg)') +
+  ggtitle(paste0(betrieb, ' 30-60 days')) +
+  theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
+  theme(plot.title = element_text(hjust = 0.5))
+plot(plt_30_60)
+
+plt_60_120 <- ggplot(data = quarters_60_120, aes(x=yearqtr, y=production, group=lactation)) +
+  geom_line(aes(col=lactation))
+plt_60_120 <- plt_60_120 + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) +
+  xlab('Calving in quarter') +
+  ylab('60-120 days production (kg)') +
+  ggtitle(paste0(betrieb, ' 60-120 days')) +
+  theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
+  theme(plot.title = element_text(hjust = 0.5))
+plot(plt_60_120)
+
+plt_305 <- ggplot(data = quarters_305, aes(x=yearqtr, y=production, group=lactation)) +
+  geom_line(aes(col=lactation))
+plt_305 <- plt_305 + 
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         panel.background = element_blank(), 
         axis.line = element_line(colour = "black")) +
   xlab('Calving in quarter') +
   ylab('305 days production (kg)') +
-  ggtitle(betrieb) +
+  ggtitle(paste0(betrieb, ' 305 days')) +
   theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
   theme(plot.title = element_text(hjust = 0.5))
-plot(plt)
+plot(plt_305)
+
 
 
 write.table(
-  quarters |> select(yearqtr, lactation, production),
+  quarters |> select(yearqtr, lactation_period, production),
   file=paste0('quarters_', betrieb, '.txt'),
   sep='\t', quote=FALSE, col.names=TRUE,row.names=FALSE, dec=',')
 
