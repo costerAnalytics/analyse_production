@@ -134,7 +134,8 @@ plt_30_60 <- plt_30_60 +
   ylab('Average day production (kg)') +
   ggtitle(paste0(betrieb, ' 30-60 days')) +
   theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylim(30, 50)
 plot(plt_30_60)
 
 plt_60_120 <- ggplot(data = quarters_60_120, aes(x=yearqtr, y=I(production/60), group=lactation)) +
@@ -148,7 +149,8 @@ plt_60_120 <- plt_60_120 +
   ylab('Average day production (kg)') +
   ggtitle(paste0(betrieb, ' 60-120 days')) +
   theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylim(30, 50)
 plot(plt_60_120)
 
 plt_305 <- ggplot(data = quarters_305, aes(x=yearqtr, y=production, group=lactation)) +
@@ -162,7 +164,8 @@ plt_305 <- plt_305 +
   ylab('305 days production (kg)') +
   ggtitle(paste0(betrieb, ' 305 days')) +
   theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylim(8500, 12500)
 plot(plt_305)
 
 
