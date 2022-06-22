@@ -40,7 +40,7 @@ quarters <- quarters |> transform(
   yearqtr = paste(year, quarter, sep = '-'),
   first_305 = NA_real_,
   later_305 = NA_real_,
-  fist_30_60 = NA_real_,
+  first_30_60 = NA_real_,
   later_30_60 = NA_real_,
   first_60_120 = NA_real_,
   later_60_120 = NA_real_)
@@ -103,7 +103,7 @@ for(i in 1:nrow(quarters)){
   
   quarters$first_305[i] = compute_total_production(curves$first_lactation, d1=0, d2=305)
   quarters$later_305[i] = compute_total_production(curves$later_lactation, d1=0, d2=305)
-  quarters$fist_30_60[i] = compute_total_production(curves$first_lactation, d1=30, d2=60)
+  quarters$first_30_60[i] = compute_total_production(curves$first_lactation, d1=30, d2=60)
   quarters$later_30_60[i] = compute_total_production(curves$later_lactation, d1=30, d2=60)
   quarters$first_60_120[i] = compute_total_production(curves$first_lactation, d1=60, d2=120)
   quarters$later_60_120[i] = compute_total_production(curves$later_lactation, d1=60, d2=120)
@@ -123,7 +123,7 @@ quarters_305 <- quarters |>
   filter(grepl('305', lactation_period)) |>
   mutate(lactation = gsub('_305', '', lactation_period))
 
-plt_30_60 <- ggplot(data = quarters_30_60, aes(x=yearqtr, y=production, group=lactation)) +
+plt_30_60 <- ggplot(data = quarters_30_60, aes(x=yearqtr, y=I(production/30), group=lactation)) +
   geom_line(aes(col=lactation))
 plt_30_60 <- plt_30_60 + 
   theme(panel.grid.major = element_blank(), 
@@ -131,13 +131,13 @@ plt_30_60 <- plt_30_60 +
         panel.background = element_blank(), 
         axis.line = element_line(colour = "black")) +
   xlab('Calving in quarter') +
-  ylab('30-60 days production (kg)') +
+  ylab('Average day production (kg)') +
   ggtitle(paste0(betrieb, ' 30-60 days')) +
   theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
   theme(plot.title = element_text(hjust = 0.5))
 plot(plt_30_60)
 
-plt_60_120 <- ggplot(data = quarters_60_120, aes(x=yearqtr, y=production, group=lactation)) +
+plt_60_120 <- ggplot(data = quarters_60_120, aes(x=yearqtr, y=I(production/60), group=lactation)) +
   geom_line(aes(col=lactation))
 plt_60_120 <- plt_60_120 + 
   theme(panel.grid.major = element_blank(), 
@@ -145,7 +145,7 @@ plt_60_120 <- plt_60_120 +
         panel.background = element_blank(), 
         axis.line = element_line(colour = "black")) +
   xlab('Calving in quarter') +
-  ylab('60-120 days production (kg)') +
+  ylab('Average day production (kg)') +
   ggtitle(paste0(betrieb, ' 60-120 days')) +
   theme(axis.text.x=element_text(angle=-45, hjust=0.001)) +
   theme(plot.title = element_text(hjust = 0.5))
